@@ -18,13 +18,14 @@ def ready_aps_data(dropna=False, drop_threshold = 0.20):
     """
     Prepares training and testing sets for APS failure classification project.
     Returns pandas dataframes with all missing measurments imputed.
-        X_train
-        X_test
-        y_train
-        y_test
+        X_train: pandas dataframe, training set features
+        X_test: pandas dataframe, testing set labels
+        y_train: pandas series, training set labels
+        y_test pandas series, testing set lables
     
     """
-    
+    ''' Make this the fxn input, rather than hardcoded, so you can reuse it for other stuff.
+    Add more defensive programming: error checks, data not useable, etc.'''
     folder = 'aps-failure-at-scania-trucks-data-set/'
     test_csv = 'aps_failure_test_set.csv'
     train_csv = 'aps_failure_training_set.csv'
@@ -57,8 +58,9 @@ def ready_aps_data(dropna=False, drop_threshold = 0.20):
 
 def prepare_dataframe(df):
     '''
-    Accepts a pandas dataframe.
-    Returns a pandas dataframe with all nan values replaced.
+    Accepts a pandas dataframe with missing values as 'na' and numbers as string objects.
+    Returns a pandas dataframe with all missing values replaced.
+    Adds feature identifying how much missing data is present.
     '''
     # Dealing with missing data labeled as 'na'
     df.replace('na', np.nan, inplace=True)
@@ -89,7 +91,7 @@ def class_to_numeric(label):
 
 def get_nan_frac_cols(df, cutoff = 0.20, graph=False):
     '''
-    Returns column labels for columns with a NaN values fraction >= a cutoff fraction.
+    Returns column labels for columns with a NaN values composition >= a cutoff fraction.
     Intended use is to visualize how prevalent NaN values are in a dataset.
     ---
     Parameters
@@ -120,3 +122,14 @@ def get_nan_frac_cols(df, cutoff = 0.20, graph=False):
         plt.xlabel('Column position')
     
     return cols_high_nan
+
+
+def reject_outliers(data, m=5):
+    '''
+    Accepts a 2D Numpy array.
+    Returns the indices rows with all values less than m times larger than the mean for that column.
+    Effectively: returns indices for rows without outlier data.
+    '''
+    array_bools = abs(data - np.mean(data, axis=0)) < m * np.std(data, axis=0)
+    indexes_not_outliers = np.apply_along_axis(all,1,array_bools)
+    return indexes_not_outliers
