@@ -54,10 +54,6 @@ def cross_val_xgb(X,y, folds, cv_scorer, pred_threshold=0.5, fit_metric='auc',
         Mean score of cv_scorer across all folds.
     '''
     
-    def prob_to_pred(num, cutoff=pred_threshold):
-        # Converts xgb prediction output to binary value
-        return 1 if num > cutoff else 0
-    
     # Prepare to store individual fold scores
     cv_scores = []
     
@@ -86,7 +82,8 @@ def cross_val_xgb(X,y, folds, cv_scorer, pred_threshold=0.5, fit_metric='auc',
                         verbose=False #gives output log as below
                        )
         # Make and assess validation predicitons
-        y_pred = fit_model.predict(X_val, ntree_limit=gbm.best_ntree_limit)
+        y_pred = fit_model.predict_proba(X_val,
+            ntree_limit=gbm.best_ntree_limit)[:,1] >= pred_threshold
         
         cv_scores.append(cv_scorer(y_val,y_pred))
     
