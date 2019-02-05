@@ -38,6 +38,7 @@ def cross_val_models(models, X, y, use_cv=5, params=defaultdict(dict), metric = 
 def cross_val_xgb(X,y, folds, cv_scorer, pred_threshold=0.5, fit_metric='auc',
                   model_objective='binary:logistic'):
     '''
+    ********     REPLACE WITH METHOD FROM XGBOOST LIBRARY    ***********
     Performs cross-validation on an XGBoost estimator object. Fits a model on
     each fold of the provided data.
     Returns cross-validation error measurements.
@@ -68,11 +69,10 @@ def cross_val_xgb(X,y, folds, cv_scorer, pred_threshold=0.5, fit_metric='auc',
         X_val = X.iloc[val_idx]
         y_val = y.iloc[val_idx]
        
-        gbm = xgb.XGBRegressor( 
+        gbm = xgb.XGBClassifier( 
                            n_estimators=30000, #arbitrary large number b/c we're using early stopping
                            max_depth=3,
-                           objective= model_objective,
-                           learning_rate=.1, 
+                           objective= model_objective, 
                            subsample=1,
                            min_child_weight=1,
                            colsample_bytree=.8
@@ -86,8 +86,7 @@ def cross_val_xgb(X,y, folds, cv_scorer, pred_threshold=0.5, fit_metric='auc',
                         verbose=False #gives output log as below
                        )
         # Make and assess validation predicitons
-        y_pred = pd.Series(fit_model.predict(X_val,
-            ntree_limit=gbm.best_ntree_limit)).apply(prob_to_pred)
+        y_pred = fit_model.predict(X_val, ntree_limit=gbm.best_ntree_limit)
         
         cv_scores.append(cv_scorer(y_val,y_pred))
     
